@@ -12,6 +12,11 @@ html, body {
     flex-direction:column;
 }
 
+#canvas {
+    width: 50%;
+    height: 50%;
+}
+
 .my-girl-img {
     margin:50px;
     width:250px;
