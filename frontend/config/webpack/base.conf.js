@@ -13,7 +13,7 @@ module.exports = (function() {
             filename: '[name].js',
         },
         resolve: {
-            extensions: ['.js'],
+            extensions: ['.js', '.glsl'],
             alias: {
                 '@': path.resolve(Conf.RootPath, 'source'),
                 'j7': path.resolve(Conf.RootPath, 'source', 'j7'),
@@ -49,6 +49,10 @@ module.exports = (function() {
                         limit: 10000,
                         name: 'fonts/[name].[hash:7].[ext]'
                     }
+                },
+                {
+                    test: /\.(vert|frag|glsl)$/,
+                    loader: 'webpack-glsl-loader'
                 }
             ],
         },
