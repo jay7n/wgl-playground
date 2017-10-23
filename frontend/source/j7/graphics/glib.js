@@ -6,8 +6,10 @@ import fragShader from 'j7/graphics/shaders/frag'
 class GLib {
     constructor() {
         Object.assign(this, {
+            canvas: null,
             gl: null,
-            shaderProgram: null
+            shaderProgram: null,
+            vao: null
         })
     }
 
@@ -65,22 +67,37 @@ class GLib {
         //1. create vertex array object(VAO) and bind it
         const vao = gl.createVertexArray()
         gl.bindVertexArray(vao)
+        this.vao = vao
 
         //2. create vertex buffer object(VBO) and bind it
         const posBuffer = gl.createBuffer()
         gl.bindBuffer(gl.ARRAY_BUFFER, posBuffer)
 
-        //3. assign buffer data to the VBO
+        //3. declare shader attributes
+        const shaderAttribLoc = {
+            pos: gl.getAttribLocation(this.shaderProgram, 'a_position')
+        }
+        gl.enableVertexAttribArray(shaderAttribLoc.pos)
+        gl.vertexAttribPointer(shaderAttribLoc.pos, 3, gl.FLOAT, false, 0, 0)
+
+        //4. assign buffer data to the VBO
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
             -1, 0, 0,
             1, 0, 0,
             0, 1, 0
         ]), gl.STATIC_DRAW)
+
+        return true
     }
 
     init(canvas) {
-        const gl = canvas.getContext('webgl2')
+        if (!canvas) {
+            logger.prod.error('sorry. no canvas detected')
+            return false
+        }
+        this.canvas = canvas
 
+        const gl = canvas.getContext('webgl2')
         if (!gl) {
             logger.prod.error('sorry. no webgl2 in the given canvas detected')
             return false
@@ -107,6 +124,36 @@ class GLib {
         }
 
         return true
+    }
+
+    resize() {  // https://webgl2fundamentals.org/webgl/lessons/webgl-resizing-the-canvas.html
+
+        const devicePixelRatio = window.devicePixelRatio || 1
+
+        const displayActualWidth = Math.floor(this.canvas.clientWidth * devicePixelRatio)
+        const displayAcutalHeight = Math.floor(this.canvas.clientWidth * devicePixelRatio)
+
+        if (this.canvas.width != displayActualWidth) {
+            this.canvas.width = displayActualWidth
+        }
+        if (this.canvas.width != displayAcutalHeight) {
+            this.canvas.height = displayAcutalHeight
+        }
+    }
+
+    draw() {
+        this.resize()
+
+        const gl = this.gl
+        gl.viewport(0, 0, gl.canvas.width, gl.canvas.height)
+
+        gl.clearColor(0, 0, 0, 1)
+        gl.clear(gl.COLOR_BUFFER_BIT)
+
+        gl.useProgram(this.shaderProgram)
+        gl.bindVertexArray(this.vao)
+
+        gl.drawArrays(gl.TRIANGLES, 0, 3)
     }
 }
 
