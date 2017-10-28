@@ -9,7 +9,8 @@ class GLib {
             canvas: null,
             gl: null,
             shaderProgram: null,
-            vao: null
+            vao: null,
+            indices: []
         })
     }
 
@@ -49,48 +50,59 @@ class GLib {
             }
         }
 
-        const shaders = shaderConfigs.map(({type, source ,fileName}) => {
+        const shaders = shaderConfigs.map(({ type, source ,fileName}) => {
             return _createShader(type, source, fileName)
         })
 
         const shaderProgram = _createProgram(shaders)
-        if (shaderProgram) {
-            this.shaderProgram = shaderProgram
-        }
 
         return shaderProgram
     }
 
-    _setupVXOs() {
+    _setupVXOs(shaderProgram, attributes, indices) {
         const gl = this.gl
+
+        if (!attributes) {
+            logger.prod.error('no attributes provided, which is mandatory')
+            return null
+        }
+
+        if (!indices) {
+            logger.prod.error('no indices provided, which is mandatory')
+            return null
+        }
+
+        // TODO: validate attributes to see if it fits the expected format
 
         //1. create vertex array object(VAO) and bind it
         const vao = gl.createVertexArray()
         gl.bindVertexArray(vao)
-        this.vao = vao
 
-        //2. create vertex buffer object(VBO) and bind it
-        const posBuffer = gl.createBuffer()
-        gl.bindBuffer(gl.ARRAY_BUFFER, posBuffer)
+        for (const [attribName, attribValue] of Object.entries(attributes)) {
 
-        //3. declare shader attributes
-        const shaderAttribLoc = {
-            pos: gl.getAttribLocation(this.shaderProgram, 'a_position')
+            //2. create vertex buffer object(VBO) and bind it
+            const buffer = gl.createBuffer()
+            gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
+
+            //3. declare shader attributes
+            const location = gl.getAttribLocation(shaderProgram, attribName)
+            gl.enableVertexAttribArray(location)
+            gl.vertexAttribPointer(location, ...attribValue.parameters)
+
+            //4. assign buffer data to the VBO
+            gl.bufferData(gl.ARRAY_BUFFER, new attribValue.bufferDataType(attribValue.buffer), gl.STATIC_DRAW)
         }
-        gl.enableVertexAttribArray(shaderAttribLoc.pos)
-        gl.vertexAttribPointer(shaderAttribLoc.pos, 3, gl.FLOAT, false, 0, 0)
 
-        //4. assign buffer data to the VBO
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-            -1, 0, 0,
-            1, 0, 0,
-            0, 1, 0
-        ]), gl.STATIC_DRAW)
+        const indexBuffer = gl.createBuffer()
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer)
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW)
 
-        return true
+        gl.bindVertexArray(null)
+
+        return vao
     }
 
-    init(canvas) {
+    init(canvas, positionBuffer, indices) {
         if (!canvas) {
             logger.prod.error('sorry. no canvas detected')
             return false
@@ -104,24 +116,39 @@ class GLib {
         }
         this.gl = gl
 
-        const shaderProgram = this._createBasicShaderProgram([{
+        const shaderConfigs = [{
             fileName: 'render.vert',
             source: vertShader,
-            type: this.gl.VERTEX_SHADER
+            type: this.gl.VERTEX_SHADER,
         }, {
             fileName: 'render.frag',
             source: fragShader,
             type: this.gl.FRAGMENT_SHADER
-        }])
+        }]
+
+        const shaderProgram = this._createBasicShaderProgram(shaderConfigs)
 
         if (!shaderProgram) {
+            logger.prod.error('creating basic shader progrom failed')
             return false
         }
         this.shaderProgram = shaderProgram
 
-        if (!this._setupVXOs()) {
+        const attributes = {
+            ['a_position']: {
+                parameters: [3, gl.FLOAT, false, 0, 0],
+                bufferDataType: Float32Array,
+                buffer: positionBuffer
+            }
+        }
+
+        const vao = this._setupVXOs(shaderProgram, attributes, indices)
+        if (!vao) {
+            logger.prod.error('setting up vao/vbos failed')
             return false
         }
+        this.vao = vao
+        this.indices = indices
 
         return true
     }
@@ -145,6 +172,10 @@ class GLib {
         this.resize()
 
         const gl = this.gl
+
+        // When you need to set the viewport to match the size of the canvas's
+        // drawingBuffer this will always be correct
+        gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight)
         gl.viewport(0, 0, gl.canvas.width, gl.canvas.height)
 
         gl.clearColor(0, 0, 0, 1)
@@ -153,7 +184,7 @@ class GLib {
         gl.useProgram(this.shaderProgram)
         gl.bindVertexArray(this.vao)
 
-        gl.drawArrays(gl.TRIANGLES, 0, 3)
+        gl.drawElements(gl.TRIANGLES, this.indices.length, gl.UNSIGNED_SHORT, 0)
     }
 }
 

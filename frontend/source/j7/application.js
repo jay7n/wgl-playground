@@ -12,7 +12,15 @@ export default class Application {
             options: null,
         })
 
-        if (!glib.init(canvas)) {
+        const positionBuffer = [
+            -1, 0, 0,
+            1, 0, 0,
+            0, 1, 0
+        ]
+
+        const indices = [0 ,1, 2]
+
+        if (!glib.init(canvas, positionBuffer, indices)) {
             return
         }
         this.glib = glib
