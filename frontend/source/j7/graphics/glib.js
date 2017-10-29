@@ -89,6 +89,7 @@ export class GLib {
 
         for (const batch of this.batches) {
             batch.draw()
+            batch.translate(0.5,0,0)
         }
     }
 }

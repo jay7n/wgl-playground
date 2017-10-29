@@ -24,14 +24,21 @@ export class BasicBatch {
                     bufferDataType: Float32Array,
                 }
             },
-            indices: {
-                vbo: gl.createBuffer(),
-                bufferDataType: Uint16Array,
+            uniforms: {
+                translate: {
+                    name: 'u_translate',
+                    location: null,
+                    data: [0,0,0,1],
+                }
             },
             data: {
                 position: [],
                 indices: [],
-            }
+            },
+            indices: {
+                vbo: gl.createBuffer(),
+                bufferDataType: Uint16Array,
+            },
         })
 
         if (shader) {
@@ -47,12 +54,20 @@ export class BasicBatch {
         const attr = posAttrib
         const location = gl.getAttribLocation(shader.program, attr.name)
         if (location == null) {
-            logger.prod.error(`no ${posAttrib.name} location found`)
+            logger.prod.error(`no attribute for '${posAttrib.name}' location found`)
             return false
         }
         attr.location = location
+        return true
+    }
 
-
+    _setTranslateUniform(gl, shader, translateUniform) {
+        const location = gl.getUniformLocation(shader.program, translateUniform.name)
+        if (!location) {
+            logger.prod.error(`no uniform for '${translateUniform.name}' location found`)
+            return false
+        }
+        translateUniform.location = location
         return true
     }
 
@@ -65,7 +80,13 @@ export class BasicBatch {
         }
         this.shader = shader
 
+        // set various attributes
         if(!this._setVertextPositionAttribute(gl, shader, this.attributes.position)) {
+            return false
+        }
+
+        // set various uniforms
+        if(!this._setTranslateUniform(this.gl, shader, this.uniforms.translate)) {
             return false
         }
 
@@ -120,11 +141,36 @@ export class BasicBatch {
         return true
     }
 
+    // x, y, z Or
+    // [x, y, z] Or
+    // {x, y, z}
+    //
+    translate(x, y, z, w) {
+        let data = [x, y, z, w || 1]
+        if (Array.isArray(x) && x.length >=3 && y == null && z == null && w == null) {
+            data = x
+            data.w = x[3]|| 1
+        } else if (x instanceof Object && x.x && x.y && x.z) {
+            data = x
+            data.w = x.w || 1
+        }
+        this.uniforms.translate.data = data
+
+        //update
+        this.draw()
+    }
+
     draw() {
         const gl = this.gl
 
+        // it's not important whether gl.userProgram() or gl.bindVertexArray() comes first
+        //
         gl.useProgram(this.shader.program)
         gl.bindVertexArray(this.vao)
+
+        const translateUniform = this.uniforms.translate
+        gl.uniform4fv(translateUniform.location, translateUniform.data)
+
         gl.drawElements(gl.TRIANGLES, this.data.indices.length, gl.UNSIGNED_SHORT, 0)
     }
 }
