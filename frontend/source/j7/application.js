@@ -1,4 +1,4 @@
-import glib from 'j7/graphics/glib'
+import { GLib } from 'j7/graphics/glib'
 
 export default class Application {
 
@@ -12,23 +12,35 @@ export default class Application {
             options: null,
         })
 
-        const positionBuffer = [
-            -1, 0, 0,
-            1, 0, 0,
-            0, 1, 0
-        ]
-
-        const indices = [0 ,1, 2]
-
-        if (!glib.init(canvas, positionBuffer, indices)) {
+        const glib = new GLib(canvas)
+        if (!glib) {
             return
         }
         this.glib = glib
 
         this._initOptions(options)
+
+        glib.addBatch({
+            position: [
+                -1, 0, 0,
+                0, 0, 0,
+                0, 1, 0,
+                1, 0, 0
+            ],
+            indices: [0,1,2, 1,2,3]
+        })
+        glib.addBatch({
+            position: [
+                -1, 0, 0,
+                0, 0, 0,
+                0, -1, 0,
+                1, 0, 0
+            ],
+            indices: [0,1,2, 1,2,3]
+        })
     }
 
     start() {
-        this.glib.draw()
+        this.glib.render()
     }
 }
