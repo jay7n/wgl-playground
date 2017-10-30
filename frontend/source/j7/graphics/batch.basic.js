@@ -111,7 +111,7 @@ export class BasicBatch {
             data = this.data
         }
 
-        // the calling sequences are vital important here,
+        // LINOTE: the calling sequences are vital important here,
         // there are several points worth noticing
         // 1.gl.enableVertexAttribArray() has to be called after gl.bindVertexArray() gets called
         // 2.gl.vertexAttribPointer() has to be called after gl.bindBuffer() gets called
@@ -155,15 +155,12 @@ export class BasicBatch {
             data.w = x.w || 1
         }
         this.uniforms.translate.data = data
-
-        //update
-        this.draw()
     }
 
     draw() {
         const gl = this.gl
 
-        // it's not important whether gl.userProgram() or gl.bindVertexArray() comes first
+        // LINOTE: it's not important whether gl.userProgram() or gl.bindVertexArray() comes first
         //
         gl.useProgram(this.shader.program)
         gl.bindVertexArray(this.vao)

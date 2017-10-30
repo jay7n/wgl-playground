@@ -42,5 +42,7 @@ export default class Application {
 
     start() {
         this.glib.render()
+        // this.glib.translate(1,0,0)
+        // this.glib.render()
     }
 }

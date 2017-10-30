@@ -12,6 +12,12 @@ html, body {
     flex-direction:column;
 }
 
+/* LINOTE: the canvas must be explicitly given an initial size in css styles before it's get resized*/
+#canvas {
+    width: 800px;
+    height: 450px;
+}
+
 .my-girl-img {
     margin:50px;
     width:250px;

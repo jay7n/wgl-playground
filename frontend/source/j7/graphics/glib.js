@@ -60,17 +60,24 @@ export class GLib {
     }
 
     resize() {  // https://webgl2fundamentals.org/webgl/lessons/webgl-resizing-the-canvas.html
+        /* LINOTE: the canvas must be explicitly given an initial size in css styles before it's get resized*/
 
         const devicePixelRatio = window.devicePixelRatio || 1
 
-        const displayActualWidth = Math.floor(this.canvas.clientWidth * devicePixelRatio)
-        const displayAcutalHeight = Math.floor(this.canvas.clientWidth * devicePixelRatio)
+        const displayActualWidth = Math.floor(this.gl.canvas.clientWidth * devicePixelRatio)
+        const displayAcutalHeight = Math.floor(this.gl.canvas.clientHeight * devicePixelRatio)
 
-        if (this.canvas.width != displayActualWidth) {
-            this.canvas.width = displayActualWidth
+        if (this.gl.canvas.width != displayActualWidth) {
+            this.gl.canvas.width = displayActualWidth
         }
-        if (this.canvas.width != displayAcutalHeight) {
-            this.canvas.height = displayAcutalHeight
+        if (this.gl.canvas.height != displayAcutalHeight) {
+            this.gl.canvas.height = displayAcutalHeight
+        }
+    }
+
+    translate(x, y, z) {
+        for (const batch of this.batches) {
+            batch.translate(x, y, z)
         }
     }
 
@@ -82,14 +89,12 @@ export class GLib {
         // When you need to set the viewport to match the size of the canvas's
         // drawingBuffer this will always be correct
         gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight)
-        gl.viewport(0, 0, gl.canvas.width, gl.canvas.height)
 
         gl.clearColor(0, 0, 0, 1)
         gl.clear(gl.COLOR_BUFFER_BIT)
 
         for (const batch of this.batches) {
             batch.draw()
-            batch.translate(0.5,0,0)
         }
     }
 }
