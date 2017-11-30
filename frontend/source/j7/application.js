@@ -27,7 +27,7 @@ export default class Application {
                 0, 1, 0,
                 1, 0, 0
             ],
-            indices: [0,1,2, 1,2,3]
+            indices: [0,1,2, 1,3,2]
         })
         glib.addBatch({
             position: [
@@ -36,13 +36,13 @@ export default class Application {
                 0, -1, 0,
                 1, 0, 0
             ],
-            indices: [0,1,2, 1,2,3]
+            indices: [0,1,2, 1,3,2]
         })
     }
 
     start() {
         this.glib.render()
-        // this.glib.translate(1,0,0)
-        // this.glib.render()
+        this.glib.translate(1,0,0)
+        this.glib.render()
     }
 }

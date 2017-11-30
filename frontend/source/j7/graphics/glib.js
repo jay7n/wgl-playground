@@ -11,7 +11,12 @@ export class GLib {
         Object.assign(this, {
             canvas: null,
             gl: null,
-            batches: [],
+            batches: {
+                basic: [],
+            },
+            shaders: {
+                basic: null,
+            }
         })
 
         if (!canvas) {
@@ -26,12 +31,6 @@ export class GLib {
             return
         }
         this.gl = gl
-    }
-
-    _createBasicBatch(gl, vertexData) {
-        if (!vertexData) {
-            logger.prod.error('creating basic batch failed. no veretxData provided')
-        }
 
         const basicShader = new BasicShader(gl, [{
             type: gl.VERTEX_SHADER,
@@ -44,10 +43,19 @@ export class GLib {
         }])
 
         if (!basicShader) {
-            return null
+            logger.prod.error('basic shader failed to create')
+            return
+        }
+        this.shaders.basic = basicShader
+
+    }
+
+    _createBasicBatch(gl, vertexData) {
+        if (!vertexData) {
+            logger.prod.error('creating basic batch failed. no veretxData provided')
         }
 
-        return  new BasicBatch(gl, basicShader, vertexData)
+        return  new BasicBatch(gl, this.shaders.basic, vertexData)
     }
 
 
@@ -56,11 +64,11 @@ export class GLib {
         if (!basicBatch) {
             return false
         }
-        this.batches.push(basicBatch)
+        this.batches.basic.push(basicBatch)
     }
 
     resize() {  // https://webgl2fundamentals.org/webgl/lessons/webgl-resizing-the-canvas.html
-        /* LINOTE: the canvas must be explicitly given an initial size in css styles before it's get resized*/
+        /* LINOTE: the canvas must be explicitly given an initial size in css styles before it's resized*/
 
         const devicePixelRatio = window.devicePixelRatio || 1
 
@@ -76,7 +84,7 @@ export class GLib {
     }
 
     translate(x, y, z) {
-        for (const batch of this.batches) {
+        for (const batch of this.batches.basic) {
             batch.translate(x, y, z)
         }
     }
@@ -93,7 +101,7 @@ export class GLib {
         gl.clearColor(0, 0, 0, 1)
         gl.clear(gl.COLOR_BUFFER_BIT)
 
-        for (const batch of this.batches) {
+        for (const batch of this.batches.basic) {
             batch.draw()
         }
     }
