@@ -25,7 +25,7 @@ export class BasicBatch {
                 }
             },
             uniforms: {
-                translate: {
+                tansform: {
                     name: 'u_translate',
                     location: null,
                     data: [0,0,0,1],

@@ -6,8 +6,8 @@ import fragShader from 'j7/graphics/shaders/frag'
 import { BasicShader } from './shader.basic'
 import { BasicBatch } from './batch.basic'
 
-const GLib = {
-    init(canvas) {
+export class GLib {
+    constructor(canvas) {
         Object.assign(this, {
             canvas: null,
             gl: null,
@@ -21,14 +21,14 @@ const GLib = {
 
         if (!canvas) {
             logger.prod.error('sorry. no canvas detected')
-            return false
+            return
         }
         this.canvas = canvas
 
         const gl = canvas.getContext('webgl2')
         if (!gl) {
             logger.prod.error('sorry. no webgl2 in the given canvas detected')
-            return false
+            return
         }
         this.gl = gl
 
@@ -44,12 +44,11 @@ const GLib = {
 
         if (!basicShader) {
             logger.prod.error('basic shader failed to create')
-            return false
+            return
         }
         this.shaders.basic = basicShader
 
-        return true
-    },
+    }
 
     _createBasicBatch(gl, vertexData) {
         if (!vertexData) {
@@ -57,7 +56,7 @@ const GLib = {
         }
 
         return  new BasicBatch(gl, this.shaders.basic, vertexData)
-    },
+    }
 
 
     addBatch(batch, material) {
@@ -66,7 +65,7 @@ const GLib = {
             return false
         }
         this.batches.basic.push(basicBatch)
-    },
+    }
 
     resize() {  // https://webgl2fundamentals.org/webgl/lessons/webgl-resizing-the-canvas.html
         /* LINOTE: the canvas must be explicitly given an initial size in css styles before it's resized*/
@@ -82,13 +81,13 @@ const GLib = {
         if (this.gl.canvas.height != displayAcutalHeight) {
             this.gl.canvas.height = displayAcutalHeight
         }
-    },
+    }
 
     translate(x, y, z) {
         for (const batch of this.batches.basic) {
             batch.translate(x, y, z)
         }
-    },
+    }
 
     render() {
         this.resize()
@@ -107,6 +106,3 @@ const GLib = {
         }
     }
 }
-
-const glib = Object.create(GLib)
-export { glib }
