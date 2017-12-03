@@ -1,9 +1,7 @@
 const Vector3 = {
     static: {
-        add(v3a, v3b, v3ab) {
-            if (v3ab == null) {
-                v3ab = createVector3()
-            }
+        add(v3a, v3b) {
+            let v3ab = createVector3()
 
             v3ab._v[0] = v3a._v[0] + v3b._v[0]
             v3ab._v[1] = v3a._v[1] + v3b._v[1]
@@ -12,9 +10,9 @@ const Vector3 = {
             return v3ab
         },
 
-        sub(v3a, v3b, v3ab) {
+        sub(v3a, v3b) {
             const inv_v3b = [...v3b].map(comp => -comp)
-            return this.static.add(v3a, inv_v3b, v3ab)
+            return this.static.add(v3a, inv_v3b)
         },
 
         dot(v3a, v3b) {
@@ -23,7 +21,11 @@ const Vector3 = {
                         v3a._v[2] * v3b._v[2]
 
             return res
-        }
+        },
+
+        multiplyMatrix3(v3, m3) {
+            // TODO
+        },
     },
 
     init(x, y, z) {
@@ -59,12 +61,14 @@ const Vector3 = {
     },
 
     add(v3) {
-        this.static.add(this, v3, this)
+        const byv3add = this.static.add(this, v3)
+        this._v = byv3add._v
         return this
     },
 
     sub(v3) {
-        this.static.sub(this, v3, this)
+        const byv3sub = this.static.sub(this, v3, this)
+        this._v = byv3sub._v
         return this
     },
 
@@ -72,8 +76,8 @@ const Vector3 = {
         return this.static.dot(this, v3)
     },
 
-    copy() {
-        return createVector3(this.v)
+    clone() {
+        return createVector3(this._v)
     }
 }
 

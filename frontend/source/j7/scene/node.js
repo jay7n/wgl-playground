@@ -1,28 +1,50 @@
 import {
     createVector3, Vector3,
-    createMatrix4
+    createMatrix4, Matrix4
 } from 'j7/math'
+
+import {
+    createBasicBatch,
+} from 'j7/graphics'
 
 import logger from 'j7/utils/logger'
 
 import { SimpleMesh } from './simplemesh'
 
-const Node = {
+const SceneNode = {
+    static: {
+        _cur_max_id: -1,
+        _glib: null, // not own it
+
+        _assignNewID() {
+            return ++SceneNode.static._cur_max_id
+        },
+
+        init(glib) {
+            SceneNode.static._glib = glib
+            return true
+        }
+    },
+
     init(options) {
         options = Object.assign({
-            position: createVector3(0,0,0),
-            rotation: createVector3(0,0,0),
-            scale: createVector3(1,1,1),
-            transformMat4: createMatrix4(),
-            dirtyTransform: false,
-            children: [],
-            parent: null,
-            name: 'defaultNodeName',
-            mounted: {
+            // this part can be overridden by parameter options
+            position: createVector3(options.position),
+            rotation: createVector3(options.rotation),
+            scale: createVector3(options.scale),
+            name: options.name || 'defaultSceneNodeName',
+            mounted: options.mounted || {
                 type: 'Void',
                 data: null
-            }
-        }, options)
+            },
+
+            // this part can NOT be overridden by parameter options
+            id: this.static._assignNewID(),
+            // transformMat4: createMatrix4(),
+            nodeIsDirty: true,
+            children: [],
+            parent: null,
+        })
 
         Object.assign(this, options)
     },
@@ -45,9 +67,9 @@ const Node = {
         return this.parent
     },
 
-    addNode(node) {
-        node.parent = this
-        this.children.push(node)
+    addSceneNode(sceneNode) {
+        sceneNode.parent = this
+        this.children.push(sceneNode)
     },
 
     mount(type, data) {
@@ -64,36 +86,70 @@ const Node = {
         }
     },
 
-    renderRecursive(accTransformMat4) {
-        if (this.dirtyTransform) {
-            this.transformMat4 = this.transformMat4.static.transform(this.position)
-            this.dirtyTransform = false
-        }
+    _processDirtyList(dirtyList) {
+        const batchList = []
 
-        accTransformMat4.multiply(this.transformMat4)
+        for (const dirty of dirtyList) {
+            const node = dirty.node
+            const transformMat4 = dirty.transformMat4
 
-        if (this.children.length > 0) {
-            for (const child of this.children) {
-                child.renderRecursive(accTransformMat4)
+            switch(node.mounted.type) {
+            case SimpleMesh.static.type: {
+                const basicBatch = createBasicBatch(node.id, {
+                    position: node.mounted.data.vertices,
+                    indices: node.mounted.data.indices,
+                }, {
+                    transform: transformMat4
+                })
+                batchList.push(basicBatch)
+                // _assembleGraphicsBatchFromSimpleMesh(this, node.mounted.data)
+                break
+            }
             }
         }
 
-        switch(this.mounted.type) {
-        case SimpleMesh.static.type:
-            break
+        return batchList
+    },
+
+    _updateRecursive(node, upLevelTransformMat4, outDirtySceneNodeList) {
+        const nodeTransformMat4 = Matrix4.static.transform(node.position)
+        const accTransformMat4 = Matrix4.static.multiply(nodeTransformMat4, upLevelTransformMat4)
+
+        if (node.children.length > 0) {
+            for (const child of node.children) {
+                if (child.nodeIsDirty) {
+                    child._updateRecursive(child, accTransformMat4, outDirtySceneNodeList)
+                    child.nodeIsDirty = false
+                }
+            }
+        }
+
+        outDirtySceneNodeList.push({
+            node,
+            transformMat4: accTransformMat4
+        })
+    },
+
+    update() {
+        if (this.nodeIsDirty) {
+            this.nodeIsDirty = false
+
+            let accTransformMat4 = createMatrix4()
+            let dirtySceneNodeList = []
+            this._updateRecursive(this, accTransformMat4, dirtySceneNodeList)
+
+            const batchList = this._processDirtyList(dirtySceneNodeList)
+            this.static._glib.sync(batchList)
+            this.static._glib.render()
         }
     },
 
-    render() {
-        let accTransformMat4 = createMatrix4()
-        this.renderRecursive(accTransformMat4)
-    }
 }
 
-function createNode(options) {
-    const node = Object.create(Node)
-    node.init(options)
-    return node
+function createSceneNode(options) {
+    const sceneNode = Object.create(SceneNode)
+    sceneNode.init(options)
+    return sceneNode
 }
 
-export { createNode, Node }
+export { createSceneNode, SceneNode }

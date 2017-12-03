@@ -1,5 +1,5 @@
 {
-  "name": "playcanvas-playground",
+  "name": "j7wgl",
   "version": "1.0.0",
   "description": "a demo project as a playground for exploring playcanvas in a structural way",
   "main": "index.js",
@@ -11,8 +11,8 @@
     "deploy": "node build/deploy.js",
     "watch": "webpack --progress --watch",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "check": "eslint --format \"node_modules/eslint-friendly-formatter\"",
-    "checkall": "eslint --format \"node_modules/eslint-friendly-formatter\" source/*.js"
+    "check": "./node_modules/.bin/eslint --format \"node_modules/eslint-friendly-formatter\"",
+    "checkall": "node ./node_modules/.bin/eslint --format 'node_modules/eslint-friendly-formatter' ./source"
   },
   "keywords": [
     "playcavas"

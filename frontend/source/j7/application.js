@@ -1,5 +1,5 @@
-import { glib } from 'j7/graphics/glib'
-import { createScene, createNode, createSimpleMesh, SimpleMesh } from 'j7/scene'
+import { initGraphicsEnvironment } from 'j7/graphics'
+import { createScene, createSceneNode, createSimpleMesh, SimpleMesh, initSceneAndNodeEnvironment } from 'j7/scene'
 
 export default class Application {
 
@@ -9,16 +9,22 @@ export default class Application {
 
     constructor(canvas, options) {
         Object.assign(this, {
-            glib: null,
+            // glib: null,
             scene: null,
             options: null,
         })
 
-        if(!glib.init(canvas)) {
+        // static environment init
+        const glib = initGraphicsEnvironment(canvas)
+        if (!glib) {
             return
         }
 
-        this.glib = glib
+        if(!initSceneAndNodeEnvironment(glib)) {
+            return
+        }
+
+        // this.glib = glib
 
         const scene = createScene()
         if (!scene) {
@@ -49,25 +55,39 @@ export default class Application {
     }
 
     start() {
-        const node = createNode({
+        const simpleMesh = createSimpleMesh({
+            vertices: [
+                -1, 0, 0,
+                0, 0, 0,
+                0, 1, 0,
+                1, 0, 0
+            ],
+            indices: [0,1,2]
+        })
+
+        const node1 = createSceneNode({
             name: 'testNode1',
-            position: [0,1,0]
+            position: [1,0,0],
             mounted: {
                 type: SimpleMesh.static.type,
-                data: createSimpleMesh{
-                    vertices: [
-                        -1, 0, 0,
-                        0, 0, 0,
-                        0, 1, 0,
-                        1, 0, 0
-                    ],
-                    indices: [0,1,2, 1,3,2]
-                }
+                data: simpleMesh
             }
         })
-        this.scene.addNode(node)
 
-        this.scene.render()
+        const node2 = createSceneNode({
+            name: 'testNode1',
+            position: [-1,-1,0],
+            mounted: {
+                type: SimpleMesh.static.type,
+                data: simpleMesh
+            }
+        })
+
+        node1.addSceneNode(node2)
+
+        this.scene.addSceneNode(node1)
+
+        this.scene.update()
 
 
         // this.glib.render()

@@ -1,16 +1,29 @@
 import logger from 'j7/utils/logger'
 
-export class BasicBatch {
-    constructor(gl, shader, vertexData) {
-        if (!gl){
-            logger.prod.error('creating Batch failed. no gl context provided')
-            return
-        }
+const BasicBatch = {
+    static: {
+        gl: null,
+        shader: null,
+        init(gl, shader) {
+            if (!gl || !shader){
+                logger.prod.error('no gl context or shader provided')
+                return false
+            }
+
+            BasicBatch.static.gl = gl
+            BasicBatch.static.shader = shader
+
+            return true
+        },
+    },
+
+    init(key, vertexData, uniformData) {
+        const gl = this.static.gl
+        const shader = this.static.shader
 
         Object.assign(this, {
-            gl,
+            key,
             vao: gl.createVertexArray(),
-            shader: null,
             attributes: {
                 position: {
                     name: 'a_position',
@@ -25,8 +38,13 @@ export class BasicBatch {
                 }
             },
             uniforms: {
-                tansform: {
+                translate: {
                     name: 'u_translate',
+                    location: null,
+                    data: [0,0,0,1],
+                },
+                transform: {
+                    name: 'u_transform_mat4',
                     location: null,
                     data: [0,0,0,1],
                 }
@@ -48,7 +66,13 @@ export class BasicBatch {
         if (vertexData) {
             this.updateVertexData(vertexData)
         }
-    }
+
+        if (uniformData) {
+            this.updateUniformData(uniformData)
+        }
+
+        return true
+    },
 
     _setVertextPositionAttribute(gl, shader, posAttrib) {
         const attr = posAttrib
@@ -59,7 +83,7 @@ export class BasicBatch {
         }
         attr.location = location
         return true
-    }
+    },
 
     _setTranslateUniform(gl, shader, translateUniform) {
         const location = gl.getUniformLocation(shader.program, translateUniform.name)
@@ -69,16 +93,25 @@ export class BasicBatch {
         }
         translateUniform.location = location
         return true
-    }
+    },
+
+    _setUniform(gl, shader, uniform) {
+        const location = gl.getUniformLocation(shader.program, uniform.name)
+        if (!location) {
+            logger.prod.error(`no uniform for '${uniform.name}' location found`)
+            return false
+        }
+        uniform.location = location
+        return true
+    },
 
     useShader(shader) {
-        const gl = this.gl
+        const gl = this.static.gl
 
         if (!shader) {
             logger.prod.error('no shader can be used.')
             return false
         }
-        this.shader = shader
 
         // set various attributes
         if(!this._setVertextPositionAttribute(gl, shader, this.attributes.position)) {
@@ -86,19 +119,22 @@ export class BasicBatch {
         }
 
         // set various uniforms
-        if(!this._setTranslateUniform(this.gl, shader, this.uniforms.translate)) {
+        if(!this._setUniform(gl, shader, this.uniforms.transform)) {
             return false
         }
+        // if(!this._setTranslateUniform(gl, shader, this.uniforms.translate)) {
+        //     return false
+        // }
 
         return true
-    }
+    },
 
     // data = {
     //      position : [Array],
     //      indices: [Array],
     // }
     updateVertexData(data) {
-        const gl = this.gl
+        const gl = this.static.gl
 
         if (data) {
             if (!data.position || !data.indices ) {
@@ -139,35 +175,56 @@ export class BasicBatch {
         gl.bindVertexArray(null)
 
         return true
-    }
+    },
+
+    updateUniformData(uniformData) {
+        if (uniformData.transform) {
+            this.uniforms.transform.data = uniformData.transform
+        }
+    },
 
     // x, y, z Or
     // [x, y, z] Or
     // {x, y, z}
     //
-    translate(x, y, z, w) {
-        let data = [x, y, z, w || 1]
-        if (Array.isArray(x) && x.length >=3 && y == null && z == null && w == null) {
-            data = x
-            data.w = x[3]|| 1
-        } else if (x instanceof Object && x.x && x.y && x.z) {
-            data = x
-            data.w = x.w || 1
-        }
-        this.uniforms.translate.data = data
-    }
+    // translate(x, y, z, w) {
+    //     let data = [x, y, z, w || 1]
+    //     if (Array.isArray(x) && x.length >=3 && y == null && z == null && w == null) {
+    //         data = x
+    //         data.w = x[3]|| 1
+    //     } else if (x instanceof Object && x.x && x.y && x.z) {
+    //         data = x
+    //         data.w = x.w || 1
+    //     }
+    //     this.uniforms.translate.data = data
+    // },
 
     draw() {
-        const gl = this.gl
+        const gl = this.static.gl
 
         // LINOTE: it's not important whether gl.userProgram() or gl.bindVertexArray() comes first
         //
-        gl.useProgram(this.shader.program)
+        gl.useProgram(this.static.shader.program)
         gl.bindVertexArray(this.vao)
 
-        const translateUniform = this.uniforms.translate
-        gl.uniform4fv(translateUniform.location, translateUniform.data)
+        // const translateUniform = this.uniforms.translate
+        // gl.uniform4fv(translateUniform.location, translateUniform.data)
+
+        const uniformTransform = this.uniforms.transform
+        logger.debug.log(uniformTransform.data)
+        gl.uniformMatrix4fv(uniformTransform.location, false, uniformTransform.data.m)
 
         gl.drawElements(gl.TRIANGLES, this.data.indices.length, gl.UNSIGNED_SHORT, 0)
     }
+}
+
+function createBasicBatch(key, vertexData, uniformData) {
+    const bbatch = Object.create(BasicBatch)
+    bbatch.init(key,vertexData, uniformData)
+    return bbatch
+}
+
+export {
+    createBasicBatch,
+    BasicBatch,
 }

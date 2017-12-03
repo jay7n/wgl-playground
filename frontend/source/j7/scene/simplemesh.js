@@ -1,5 +1,4 @@
 import logger from 'j7/utils/logger'
-import { glib } from 'j7/graphics/glib'
 
 const SimpleMesh = {
     static: {
@@ -12,24 +11,20 @@ const SimpleMesh = {
             return
         }
 
-        vertices = [...vertices]
-        indices = [...indices]
-
         Object.assign(this, {
-            vertices,
-            indices,
+            // LINOTE: if performance issue happens we can just use the original arrays directly
+            _vertices: [...vertices],
+            _indices: [...indices],
             batchAdded: false,
         })
     },
 
-    render(batch) {
-        if (!this.batchAdded) {
-            glib.addBatch({
-                position: this.vertices,
-                indices: this.indices
-            })
-            this.batchAdded = true
-        }
+    get vertices() {
+        return this._vertices
+    },
+
+    get indices() {
+        return this._indices
     }
 }
 

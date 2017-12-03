@@ -1,19 +1,19 @@
-import { createNode } from 'j7/scene/node'
+import { createSceneNode } from 'j7/scene/node'
 
 const Scene = {
     init() {
         Object.assign(this, {
-            root: createNode({
+            root: createSceneNode({
                 name: 'sceneRootNode'
             })
         })
     },
-    addNode(node) {
-        this.root.addNode(node)
+    addSceneNode(node) {
+        this.root.addSceneNode(node)
     },
 
-    render() {
-        this.root.render()
+    update() {
+        this.root.update()
     }
 }
 
