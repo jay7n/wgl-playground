@@ -1,4 +1,5 @@
-import { createBasicBatch, BasicBatch } from './batch.basic'
+import { BasicBatch } from './batch.basic'
+import { createBasicPrimitive, BasicPrimitive } from './primitive.basic'
 import { BasicShader } from './shader.basic'
 import { createGLib } from './glib'
 import logger from 'j7/utils/logger'
@@ -33,7 +34,7 @@ function initBasicBatchEnvironment(gl) {
 function initGraphicsEnvironment(canvas) {
     const gl = canvas.getContext('webgl2')
     if (!gl) {
-        logger.prod.error('sorry. no webgl2 in the given canvas detected')
+        logger.prod.error('no webgl2 in the given canvas detected')
         return null
     }
 
@@ -53,6 +54,6 @@ function initGraphicsEnvironment(canvas) {
 
 export {
     initGraphicsEnvironment,
-    createBasicBatch,
-    BasicBatch,
+    createBasicPrimitive,
+    BasicPrimitive,
 }

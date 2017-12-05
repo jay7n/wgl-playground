@@ -1,5 +1,7 @@
 import logger from 'j7/utils/logger'
 
+import { createBasicBatch } from './batch.basic'
+
 const GLib = {
     init(canvas, gl) {
         if (!canvas) {
@@ -57,17 +59,19 @@ const GLib = {
     //     return  createBasicBatch(vertexData)
     // },
 
-    _addBasicBatch(batch) {
-        this.batches.basic.push(batch)
+    _createBasicBatchWithPrimitive(primitive) {
+        const batch = createBasicBatch(primitive.key, primitive.vertexData, primitive.uniformData)
+        return batch
     },
 
-    sync(batchList) {
-        //TODO: sync func should compare & diff the given 'batchList' parameter and the
-        //TODO: internal this.batches, and then do the 'add', 'update' and/or 'delete'
-        //TODO: operations according to the issue
+    sync(primitiveList) {
+        //TODO: sync func should compare & diff the given 'primitiveList' parameter and the
+        //TODO: internal this.batches using the same 'key' member, and then do the decision about
+        //TODO: whether/how to do 'add', 'update' and/or 'delete' operations according to the issue
 
-        for (const batch of batchList) {
-            this._addBasicBatch(batch)
+        for (const primitive of primitiveList) {
+            const batch = this._createBasicBatchWithPrimitive(primitive)
+            this.batches.basic.push(batch)
         }
     },
 

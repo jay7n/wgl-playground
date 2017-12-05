@@ -4,7 +4,7 @@ import {
 } from 'j7/math'
 
 import {
-    createBasicBatch,
+    createBasicPrimitive,
 } from 'j7/graphics'
 
 import logger from 'j7/utils/logger'
@@ -87,7 +87,7 @@ const SceneNode = {
     },
 
     _processDirtyList(dirtyList) {
-        const batchList = []
+        const primitiveList = []
 
         for (const dirty of dirtyList) {
             const node = dirty.node
@@ -95,20 +95,20 @@ const SceneNode = {
 
             switch(node.mounted.type) {
             case SimpleMesh.static.type: {
-                const basicBatch = createBasicBatch(node.id, {
+                const basicPrimitive = createBasicPrimitive(node.id, {
                     position: node.mounted.data.vertices,
                     indices: node.mounted.data.indices,
                 }, {
                     transform: transformMat4
                 })
-                batchList.push(basicBatch)
+                primitiveList.push(basicPrimitive)
                 // _assembleGraphicsBatchFromSimpleMesh(this, node.mounted.data)
                 break
             }
             }
         }
 
-        return batchList
+        return primitiveList
     },
 
     _updateRecursive(node, upLevelTransformMat4, outDirtySceneNodeList) {
@@ -138,8 +138,9 @@ const SceneNode = {
             let dirtySceneNodeList = []
             this._updateRecursive(this, accTransformMat4, dirtySceneNodeList)
 
-            const batchList = this._processDirtyList(dirtySceneNodeList)
-            this.static._glib.sync(batchList)
+            const primitiveList = this._processDirtyList(dirtySceneNodeList)
+            this.static._glib.sync(primitiveList)
+
             this.static._glib.render()
         }
     },
