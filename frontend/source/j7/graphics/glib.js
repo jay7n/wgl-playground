@@ -1,6 +1,8 @@
 import logger from 'j7/utils/logger'
 
-import { createBasicBatch } from './batch.basic'
+import { createMatrix4 } from 'j7/math'
+import { createBasicBatch, BasicBatch } from './batch.basic'
+import { SimpleMeshPrimitive, CameraPrimitive } from './primitive.basic'
 
 const GLib = {
     init(canvas, gl) {
@@ -20,44 +22,12 @@ const GLib = {
             batches: {
                 basic: [],
             },
-            // shaders: {
-            //     basic: null,
-            // }
+            viewMat4: createMatrix4(),
+            perspectiveProjectionMat4: createMatrix4(),
         })
-
-        // const gl = canvas.getContext('webgl2')
-        // if (!gl) {
-        //     logger.prod.error('sorry. no webgl2 in the given canvas detected')
-        //     return false
-        // }
-
-
-        // const basicShader = new BasicShader(gl, [{
-        //     type: gl.VERTEX_SHADER,
-        //     source: vertShader,
-        //     fileName: 'vert.glsl'
-        // }, {
-        //     type: gl.FRAGMENT_SHADER,
-        //     source: fragShader,
-        //     fileName: 'frag.glsl'
-        // }])
-
-        // if (!basicShader) {
-        //     logger.prod.error('basic shader failed to create')
-        //     return false
-        // }
-        // this.shaders.basic = basicShader
 
         return true
     },
-
-    // _createBasicBatch(vertexData) {
-    //     if (!vertexData) {
-    //         logger.prod.error('creating basic batch failed. no veretxData provided')
-    //     }
-    //
-    //     return  createBasicBatch(vertexData)
-    // },
 
     _createBasicBatchWithPrimitive(primitive) {
         const batch = createBasicBatch(primitive.key, primitive.vertexData, primitive.uniformData)
@@ -70,8 +40,20 @@ const GLib = {
         //TODO: whether/how to do 'add', 'update' and/or 'delete' operations according to the issue
 
         for (const primitive of primitiveList) {
-            const batch = this._createBasicBatchWithPrimitive(primitive)
-            this.batches.basic.push(batch)
+            switch (Object.getPrototypeOf(primitive)) {
+            case SimpleMeshPrimitive: {
+                const batch = this._createBasicBatchWithPrimitive(primitive)
+                this.batches.basic.push(batch)
+                break
+            }
+            case CameraPrimitive: {
+                BasicBatch.static.updateUniformData({
+                    view: primitive.viewMatrix,
+                    perspectiveProjection: primitive.perspectiveProjectionMatrix,
+                })
+                break
+            }
+            }
         }
     },
 
@@ -90,12 +72,6 @@ const GLib = {
             this.gl.canvas.height = displayAcutalHeight
         }
     },
-
-    // translate(x, y, z) {
-    //     for (const batch of this.batches.basic) {
-    //         batch.translate(x, y, z)
-    //     }
-    // },
 
     render() {
         this.resize()

@@ -1,5 +1,8 @@
 import { BasicBatch } from './batch.basic'
-import { createBasicPrimitive, BasicPrimitive } from './primitive.basic'
+import {
+    createSimpleMeshPrimitive, SimpleMeshPrimitive,
+    createCameraPrimitive, CameraPrimitive,
+} from './primitive.basic'
 import { BasicShader } from './shader.basic'
 import { createGLib } from './glib'
 import logger from 'j7/utils/logger'
@@ -54,6 +57,8 @@ function initGraphicsEnvironment(canvas) {
 
 export {
     initGraphicsEnvironment,
-    createBasicPrimitive,
-    BasicPrimitive,
+    createSimpleMeshPrimitive,
+    SimpleMeshPrimitive,
+    createCameraPrimitive,
+    CameraPrimitive,
 }

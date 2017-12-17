@@ -1,19 +1,35 @@
-import { createSceneNode } from 'j7/scene/node'
+import { createSceneNode } from './node'
+import { SimpleMesh } from './simplemesh'
+import { Camera } from './camera'
 
 const Scene = {
     init() {
         Object.assign(this, {
-            root: createSceneNode({
+            rootSceneNode: createSceneNode({
                 name: 'sceneRootNode'
-            })
+            }),
+            nodes: {
+                simpleMesh: [],
+                camera: [],
+                light: [],
+            }
         })
     },
+
     addSceneNode(node) {
-        this.root.addSceneNode(node)
+        switch(node.mounted.type) {
+        case SimpleMesh.static.type:
+            this.nodes.simpleMesh.push(node)
+            break
+        case Camera.static.type:
+            this.nodes.camera.push(node)
+            break
+        }
+        this.rootSceneNode.addSceneNode(node)
     },
 
     update() {
-        this.root.update()
+        this.rootSceneNode.update()
     }
 }
 

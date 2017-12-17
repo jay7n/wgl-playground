@@ -4,12 +4,14 @@ import {
 } from 'j7/math'
 
 import {
-    createBasicPrimitive,
+    createSimpleMeshPrimitive,
+    createCameraPrimitive
 } from 'j7/graphics'
 
 import logger from 'j7/utils/logger'
 
 import { SimpleMesh } from './simplemesh'
+import { Camera } from './camera'
 
 const SceneNode = {
     static: {
@@ -29,6 +31,7 @@ const SceneNode = {
     init(options) {
         options = Object.assign({
             // this part can be overridden by parameter options
+            active: options.active == null ? true : options.active,
             position: createVector3(options.position),
             rotation: createVector3(options.rotation),
             scale: createVector3(options.scale),
@@ -40,7 +43,6 @@ const SceneNode = {
 
             // this part can NOT be overridden by parameter options
             id: this.static._assignNewID(),
-            // transformMat4: createMatrix4(),
             nodeIsDirty: true,
             children: [],
             parent: null,
@@ -88,25 +90,42 @@ const SceneNode = {
 
     _processDirtyList(dirtyList) {
         const primitiveList = []
+        let activeCamera = null
+        let cameraTransformMat4 = null
 
         for (const dirty of dirtyList) {
             const node = dirty.node
+            const mounted = node.mounted
             const transformMat4 = dirty.transformMat4
 
-            switch(node.mounted.type) {
-            case SimpleMesh.static.type: {
-                const basicPrimitive = createBasicPrimitive(node.id, {
-                    position: node.mounted.data.vertices,
-                    indices: node.mounted.data.indices,
-                }, {
-                    transform: transformMat4
-                })
-                primitiveList.push(basicPrimitive)
-                // _assembleGraphicsBatchFromSimpleMesh(this, node.mounted.data)
-                break
-            }
+            if (node.active) {
+                switch(mounted.type) {
+                case SimpleMesh.static.type: {
+                    const primitive = createSimpleMeshPrimitive(node.id, {
+                        position: mounted.data.vertices,
+                        indices: mounted.data.indices,
+                    }, {
+                        transform: transformMat4
+                    })
+                    primitiveList.push(primitive)
+                    break
+                }
+                case Camera.static.type: {
+                    activeCamera = mounted.data
+                    cameraTransformMat4 = transformMat4
+                    break
+                }
+                }
             }
         }
+
+        if (!activeCamera) {
+            logger.prod.error('none camera exists or activated. at least one camera should be added into the scene and keep active.')
+            return
+        }
+        // LINOTE: for camera the underlining glib only keeps one camera primitive(currently), so we use 'cameraode.id
+        const cameraPrimitive = createCameraPrimitive('camera-prim', cameraTransformMat4, activeCamera.perspectiveProjectionMatrix)
+        primitiveList.push(cameraPrimitive)
 
         return primitiveList
     },

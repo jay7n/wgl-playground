@@ -1,9 +1,8 @@
-import j7 from 'j7'
+import App from './app'
 
 async function main() {
     const canvas = document.getElementById('canvas')
-    const app = new j7.Application(canvas)
-
+    const app = new App(canvas)
     app.start()
 }
 

@@ -4,6 +4,14 @@ const BasicBatch = {
     static: {
         gl: null,
         shader: null,
+        attributes: {
+            position: null,
+        },
+        uniforms: {
+            transform: null,
+            view: null,
+            perspectiveProjection: null
+        },
         init(gl, shader) {
             if (!gl || !shader){
                 logger.prod.error('no gl context or shader provided')
@@ -13,7 +21,62 @@ const BasicBatch = {
             BasicBatch.static.gl = gl
             BasicBatch.static.shader = shader
 
+            BasicBatch.static.attributes = {
+                position: {
+                    name: 'a_position',
+                    location: null,
+                    numComponent: 3,
+                    componentType: gl.FLOAT,
+                    normalized: false,
+                    stride: 0,
+                    offset: 0,
+                    vbo: null, // should fill in each batch instance
+                    bufferDataType: Float32Array,
+                }
+            }
+
+            BasicBatch.static.uniforms = {
+                transform: {
+                    name: 'u_transform_mat4',
+                    location: null,
+                    data: null, // should fill in each batch instance
+                },
+                view: {
+                    name: 'u_view_mat4',
+                    location: null,
+                    data: [ // can be changed during rendering process
+                        1,0,0,0,
+                        0,1,0,0,
+                        0,0,1,0,
+                        0,0,0,1
+                    ],
+                },
+                perspectiveProjection: {
+                    name: 'u_perspective_projection_mat4',
+                    location: null,
+                    data: [ // can be changed during rendering process
+                        1,0,0,0,
+                        0,1,0,0,
+                        0,0,1,0,
+                        0,0,0,1
+                    ],
+                },
+            }
+
             return true
+        },
+
+        _setUniformForMatrix4fvToGL(gl, uniform) {
+            gl.uniformMatrix4fv(uniform.location, false, uniform.data.m)
+        },
+
+        updateUniformData(uniformData) {
+            if (uniformData.view) {
+                BasicBatch.static.uniforms.view.data = uniformData.view
+            }
+            if (uniformData.perspectiveProjection) {
+                BasicBatch.static.uniforms.perspectiveProjection.data = uniformData.perspectiveProjection
+            }
         },
     },
 
@@ -25,29 +88,19 @@ const BasicBatch = {
             key,
             vao: gl.createVertexArray(),
             attributes: {
-                position: {
-                    name: 'a_position',
-                    location: null,
-                    numComponent: 3,
-                    componentType: gl.FLOAT,
-                    normalized: false,
-                    stride: 0,
-                    offset: 0,
+                position: Object.assign(Object.create(BasicBatch.static.attributes.position), {
                     vbo: gl.createBuffer(),
-                    bufferDataType: Float32Array,
-                }
+                }),
             },
             uniforms: {
-                translate: {
-                    name: 'u_translate',
-                    location: null,
-                    data: [0,0,0,1],
-                },
-                transform: {
-                    name: 'u_transform_mat4',
-                    location: null,
-                    data: [0,0,0,1],
-                }
+                transform: Object.assign(Object.create(BasicBatch.static.uniforms.transform), {
+                    data: [
+                        1,0,0,0,
+                        0,1,0,0,
+                        0,0,1,0,
+                        0,0,0,1
+                    ]
+                }),
             },
             data: {
                 position: [],
@@ -85,16 +138,6 @@ const BasicBatch = {
         return true
     },
 
-    _setTranslateUniform(gl, shader, translateUniform) {
-        const location = gl.getUniformLocation(shader.program, translateUniform.name)
-        if (!location) {
-            logger.prod.error(`no uniform for '${translateUniform.name}' location found`)
-            return false
-        }
-        translateUniform.location = location
-        return true
-    },
-
     _setUniform(gl, shader, uniform) {
         const location = gl.getUniformLocation(shader.program, uniform.name)
         if (!location) {
@@ -114,17 +157,17 @@ const BasicBatch = {
         }
 
         // set various attributes
-        if(!this._setVertextPositionAttribute(gl, shader, this.attributes.position)) {
+        if(!this._setVertextPositionAttribute(gl, shader, this.static.attributes.position)) {
             return false
         }
 
         // set various uniforms
-        if(!this._setUniform(gl, shader, this.uniforms.transform)) {
+        if(!this._setUniform(gl, shader, this.static.uniforms.transform) ||
+           !this._setUniform(gl, shader, this.static.uniforms.view) ||
+           !this._setUniform(gl, shader, this.static.uniforms.perspectiveProjection)
+        ) {
             return false
         }
-        // if(!this._setTranslateUniform(gl, shader, this.uniforms.translate)) {
-        //     return false
-        // }
 
         return true
     },
@@ -183,22 +226,6 @@ const BasicBatch = {
         }
     },
 
-    // x, y, z Or
-    // [x, y, z] Or
-    // {x, y, z}
-    //
-    // translate(x, y, z, w) {
-    //     let data = [x, y, z, w || 1]
-    //     if (Array.isArray(x) && x.length >=3 && y == null && z == null && w == null) {
-    //         data = x
-    //         data.w = x[3]|| 1
-    //     } else if (x instanceof Object && x.x && x.y && x.z) {
-    //         data = x
-    //         data.w = x.w || 1
-    //     }
-    //     this.uniforms.translate.data = data
-    // },
-
     draw() {
         const gl = this.static.gl
 
@@ -207,12 +234,9 @@ const BasicBatch = {
         gl.useProgram(this.static.shader.program)
         gl.bindVertexArray(this.vao)
 
-        // const translateUniform = this.uniforms.translate
-        // gl.uniform4fv(translateUniform.location, translateUniform.data)
-
-        const uniformTransform = this.uniforms.transform
-        logger.debug.log(uniformTransform.data)
-        gl.uniformMatrix4fv(uniformTransform.location, false, uniformTransform.data.m)
+        BasicBatch.static._setUniformForMatrix4fvToGL(gl, this.uniforms.transform)
+        BasicBatch.static._setUniformForMatrix4fvToGL(gl, BasicBatch.static.uniforms.view)
+        BasicBatch.static._setUniformForMatrix4fvToGL(gl, BasicBatch.static.uniforms.perspectiveProjection)
 
         gl.drawElements(gl.TRIANGLES, this.data.indices.length, gl.UNSIGNED_SHORT, 0)
     }
