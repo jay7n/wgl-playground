@@ -29,12 +29,13 @@ export default class Application {
                 0, 1, 0,
                 1, 0, 0
             ],
-            indices: [0,1,2]
+            indices: [0,1,2, 2,1,3,],
+            mode: 'TRIANGLES'
         })
 
         const node1 = j7.createSceneNode({
             name: 'testNode1',
-            position: [0,0,-1.1],
+            position: [0,0,-2],
             mounted: {
                 type: j7.SimpleMesh.static.type,
                 data: simpleMesh
@@ -42,15 +43,15 @@ export default class Application {
         })
         this.scene.addSceneNode(node1)
 
-        const node3 = j7.createSceneNode({
-            name: 'testNode3',
-            position: [1,0,-9.9],
-            mounted: {
-                type: j7.SimpleMesh.static.type,
-                data: simpleMesh
-            }
-        })
-        this.scene.addSceneNode(node3)
+        // const node3 = j7.createSceneNode({
+        //     name: 'testNode3',
+        //     position: [1,0,-9.9],
+        //     mounted: {
+        //         type: j7.SimpleMesh.static.type,
+        //         data: simpleMesh
+        //     }
+        // })
+        // this.scene.addSceneNode(node3)
 
         this.scene.update()
     }

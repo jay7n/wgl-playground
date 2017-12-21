@@ -2,7 +2,7 @@ import logger from 'j7/utils/logger'
 
 import { createMatrix4 } from 'j7/math'
 import { createBasicBatch, BasicBatch } from './batch.basic'
-import { SimpleMeshPrimitive, CameraPrimitive } from './primitive.basic'
+import { SimpleMeshPrimitive, SimpleMeshWireframePrimitive, CameraPrimitive } from './primitive.basic'
 
 const GLib = {
     init(canvas, gl) {
@@ -29,32 +29,20 @@ const GLib = {
         return true
     },
 
-    _createBasicBatchWithPrimitive(primitive) {
-        const batch = createBasicBatch(primitive.key, primitive.vertexData, primitive.uniformData)
-        return batch
-    },
-
-    sync(primitiveList) {
-        //TODO: sync func should compare & diff the given 'primitiveList' parameter and the
-        //TODO: internal this.batches using the same 'key' member, and then do the decision about
-        //TODO: whether/how to do 'add', 'update' and/or 'delete' operations according to the issue
-
-        for (const primitive of primitiveList) {
-            switch (Object.getPrototypeOf(primitive)) {
-            case SimpleMeshPrimitive: {
-                const batch = this._createBasicBatchWithPrimitive(primitive)
-                this.batches.basic.push(batch)
-                break
-            }
-            case CameraPrimitive: {
-                BasicBatch.static.updateUniformData({
-                    view: primitive.viewMatrix,
-                    perspectiveProjection: primitive.perspectiveProjectionMatrix,
-                })
-                break
-            }
-            }
+    _createBasicBatchWithPrimitive(primitive, options) {
+        const vertexData = {
+            positions: primitive.vertPosition,
+            indices: primitive.vertIndices,
+            baryCenters: primitive.vertBaryCenter, // used for wireframe mode, can be empty if not set to wireframe
+            mode: primitive.mode,
         }
+
+        const uniformData = {
+            transform: primitive.transformMat4
+        }
+
+        const batch = createBasicBatch(primitive.key, vertexData, uniformData, options)
+        return batch
     },
 
     resize() {  // https://webgl2fundamentals.org/webgl/lessons/webgl-resizing-the-canvas.html
@@ -73,6 +61,30 @@ const GLib = {
         }
     },
 
+    sync(primitiveList, options) {
+        //TODO: sync func should compare & diff the given 'primitiveList' parameter and the
+        //TODO: internal this.batches using the same 'key' member, and then do the decision about
+        //TODO: whether/how to do 'add', 'update' and/or 'delete' operations according to the issue
+
+        for (const primitive of primitiveList) {
+            switch (Object.getPrototypeOf(primitive)) {
+            case SimpleMeshPrimitive:
+            case SimpleMeshWireframePrimitive: {
+                const batch = this._createBasicBatchWithPrimitive(primitive, options)
+                this.batches.basic.push(batch)
+                break
+            }
+            case CameraPrimitive: {
+                BasicBatch.static.updateUniformData({
+                    view: primitive.viewMatrix,
+                    perspectiveProjection: primitive.perspectiveProjectionMatrix,
+                })
+                break
+            }
+            }
+        }
+    },
+
     render() {
         this.resize()
 
@@ -88,6 +100,11 @@ const GLib = {
         for (const batch of this.batches.basic) {
             batch.draw()
         }
+    },
+
+    syncAndRender(primitiveList, options) {
+        this.sync(primitiveList, options)
+        this.render()
     }
 }
 

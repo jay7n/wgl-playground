@@ -1,32 +1,23 @@
 import { BasicBatch } from './batch.basic'
+import { BasicShader } from './shader.basic'
 import {
     createSimpleMeshPrimitive, SimpleMeshPrimitive,
     createCameraPrimitive, CameraPrimitive,
 } from './primitive.basic'
-import { BasicShader } from './shader.basic'
 import { createGLib } from './glib'
 import logger from 'j7/utils/logger'
 
-import vertShader from 'j7/graphics/shaders/vert'
-import fragShader from 'j7/graphics/shaders/frag'
-
-function initBasicBatchEnvironment(gl) {
-    const basicShader = new BasicShader(gl, [{
-        type: gl.VERTEX_SHADER,
-        source: vertShader,
-        fileName: 'vert.glsl'
-    }, {
-        type: gl.FRAGMENT_SHADER,
-        source: fragShader,
-        fileName: 'frag.glsl'
-    }])
-
-    if (!basicShader) {
-        logger.prod.error('failed to create basic shader')
+function initBasicShaderEnvironment(gl) {
+    if (!BasicShader.static.init(gl)) {
+        logger.prod.error('failed to call basic shader static init func')
         return false
     }
 
-    if (!BasicBatch.static.init(gl, basicShader)) {
+    return true
+}
+
+function initBasicBatchEnvironment(gl) {
+    if (!BasicBatch.static.init(gl)) {
         logger.prod.error('failed to call basic batch static init func')
         return false
     }
@@ -38,6 +29,11 @@ function initGraphicsEnvironment(canvas) {
     const gl = canvas.getContext('webgl2')
     if (!gl) {
         logger.prod.error('no webgl2 in the given canvas detected')
+        return null
+    }
+
+    if (!initBasicShaderEnvironment(gl)) {
+        logger.prod.error('failed to init BasicBatch environment')
         return null
     }
 

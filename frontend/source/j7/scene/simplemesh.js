@@ -5,17 +5,21 @@ const SimpleMesh = {
         type: 'SimpleMesh'
     },
 
-    init(vertices, indices) {
+    init(vertices, indices, mode) {
         if (!Array.isArray(vertices) || !Array.isArray(indices)) {
             logger.prod.error('either vertices or indices is not an Array type')
             return
+        }
+
+        if (!mode) {
+            mode = 'TRIANGLES'
         }
 
         Object.assign(this, {
             // LINOTE: if performance issue happens we can just use the original arrays directly
             _vertices: [...vertices],
             _indices: [...indices],
-            batchAdded: false,
+            mode,
         })
     },
 

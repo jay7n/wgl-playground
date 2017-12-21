@@ -12,6 +12,9 @@ const Scene = {
                 simpleMesh: [],
                 camera: [],
                 light: [],
+            },
+            renderOptions: {
+                wireframeMode: true
             }
         })
     },
@@ -29,7 +32,7 @@ const Scene = {
     },
 
     update() {
-        this.rootSceneNode.update()
+        this.rootSceneNode.update(this.renderOptions)
     }
 }
 

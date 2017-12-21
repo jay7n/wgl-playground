@@ -88,7 +88,7 @@ const SceneNode = {
         }
     },
 
-    _processDirtyList(dirtyList) {
+    _processDirtyList(dirtyList, options) {
         const primitiveList = []
         let activeCamera = null
         let cameraTransformMat4 = null
@@ -102,11 +102,11 @@ const SceneNode = {
                 switch(mounted.type) {
                 case SimpleMesh.static.type: {
                     const primitive = createSimpleMeshPrimitive(node.id, {
-                        position: mounted.data.vertices,
-                        indices: mounted.data.indices,
-                    }, {
-                        transform: transformMat4
-                    })
+                        vertPosition: mounted.data.vertices,
+                        vertIndices: mounted.data.indices,
+                        transformMat4: transformMat4,
+                        mode: mounted.data.mode
+                    }, options)
                     primitiveList.push(primitive)
                     break
                 }
@@ -149,7 +149,7 @@ const SceneNode = {
         })
     },
 
-    update() {
+    update(options) {
         if (this.nodeIsDirty) {
             this.nodeIsDirty = false
 
@@ -157,10 +157,8 @@ const SceneNode = {
             let dirtySceneNodeList = []
             this._updateRecursive(this, accTransformMat4, dirtySceneNodeList)
 
-            const primitiveList = this._processDirtyList(dirtySceneNodeList)
-            this.static._glib.sync(primitiveList)
-
-            this.static._glib.render()
+            const primitiveList = this._processDirtyList(dirtySceneNodeList, options)
+            this.static._glib.syncAndRender(primitiveList, options)
         }
     },
 
