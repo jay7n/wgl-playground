@@ -1,12 +1,15 @@
 import {
     createVector3, Vector3,
-    createMatrix4, Matrix4
+    createMatrix4, Matrix4,
+    createQuaternion, Quaternion,
 } from 'j7/math'
 
 import {
     createSimpleMeshPrimitive,
     createCameraPrimitive
 } from 'j7/graphics'
+
+import { stupidIsType } from 'j7/base'
 
 import logger from 'j7/utils/logger'
 
@@ -32,9 +35,10 @@ const SceneNode = {
         options = Object.assign({
             // this part can be overridden by parameter options
             active: options.active == null ? true : options.active,
-            position: createVector3(options.position),
-            rotation: createVector3(options.rotation),
-            scale: createVector3(options.scale),
+            position: options.position || createVector3(),
+            rotation: options.rotation,
+            rotationAxisAngle: options.rotationAxisAngle,
+            scale: options.scale || createVector3(1,1,1),
             name: options.name || 'defaultSceneNodeName',
             mounted: options.mounted || {
                 type: 'Void',
@@ -49,20 +53,105 @@ const SceneNode = {
         })
 
         Object.assign(this, options)
+
+        this.setPosition(options.position)
+
+        if (options.rotation) {
+            this.setRotation(options.rotation)
+        } else if (options.rotationAxisAngle){
+            this.setRotationAxisAngle(options.rotationAxisAngle)
+        } else {
+            this.setRotation(0,0,0,1)
+        }
+        this.setScale(options.scale)
     },
 
-    setPosition(position) {
-        if (Vector3.isPrototypeOf(position)) {
-            this.position = position
-        } else {
-            this.position = createVector3(position)
+    setPosition(x, y, z) {
+        let pos = x
+        if (!stupidIsType(pos, Vector3)) {
+            pos = createVector3(x, y, z)
         }
-
+        this.position = pos
         this.dirtyTransform = true
+        return this
     },
 
     getPosition() {
         return this.position.copy()
+    },
+    translate(x, y, z) {
+        let pos = x
+        if (!stupidIsType(pos, Vector3)) {
+            pos = createVector3(x, y, z)
+        }
+        this.position.add(pos)
+        this.dirtyTransform = true
+    },
+
+    setRotation(x, y, z, w) {
+        let quat = x
+        if (!stupidIsType(quat, Quaternion)) {
+            quat = createQuaternion(x, y, z, w)
+        }
+        this.rotation = quat
+    },
+
+    getRotation() {
+        return this.rotation.copy()
+    },
+
+    rotate(x, y, z, w) {
+        let quat = x
+        if (!stupidIsType(quat, Quaternion)) {
+            quat = createQuaternion(x, y, z, w)
+        }
+        this.rotation = Quaternion.static.multiply(quat, this.rotation)
+    },
+
+    setRotationAxisAngle(x, y, z, angle) {
+        // let axis = [x, y, z]
+        // if (stupidIsType(x, Array)) {
+        //     const arr = x; axis = [arr[0], arr[1], arr[2]]
+        //     angle = y
+        // } else if (stupidIsType(x, Object)) {
+        //     const obj = x; axis = [obj.x, obj.y, obj.z]
+        //     angle = y
+        // }
+        const q = Quaternion.static.createFromAxisAngle(x, y, z, angle)
+        this.rotation = q
+    },
+
+    getRotationAxisAngle() {
+        // TODO
+    },
+
+    rotateAxisAngle(x, y, z, angle) {
+        const q = Quaternion.static.createFromAxisAngle(x, y, z, angle)
+        this.rotation = Quaternion.static.multiply(q, this.rotation)
+    },
+
+    setScale(x, y, z) {
+        let scale = x
+        if (!stupidIsType(scale, Vector3)) {
+            scale = createVector3(x, y, z)
+        }
+        this.scale = scale
+    },
+
+    getScale() {
+        return this.scale.copy()
+    },
+
+    scale(x, y, z) {
+        let scale = x
+        if (!stupidIsType(scale, Vector3)) {
+            scale = createVector3(x, y, z)
+        }
+        this.scale = createVector3(
+            this.scale.x * scale.x,
+            this.scale.y * scale.y,
+            this.scale.z * scale.z,
+        )
     },
 
     getParent() {
@@ -123,7 +212,7 @@ const SceneNode = {
             logger.prod.error('none camera exists or activated. at least one camera should be added into the scene and keep active.')
             return
         }
-        // LINOTE: for camera the underlining glib only keeps one camera primitive(currently), so we use 'cameraode.id
+        // LINOTE: for camera the underlying glib only keeps one camera primitive(currently), so we use 'camera-prim' as the key
         const cameraPrimitive = createCameraPrimitive('camera-prim', cameraTransformMat4, activeCamera.perspectiveProjectionMatrix)
         primitiveList.push(cameraPrimitive)
 
@@ -131,7 +220,7 @@ const SceneNode = {
     },
 
     _updateRecursive(node, upLevelTransformMat4, outDirtySceneNodeList) {
-        const nodeTransformMat4 = Matrix4.static.transform(node.position)
+        const nodeTransformMat4 = Matrix4.static.transform(node.position, node.rotation, node.scale)
         const accTransformMat4 = Matrix4.static.multiply(nodeTransformMat4, upLevelTransformMat4)
 
         if (node.children.length > 0) {

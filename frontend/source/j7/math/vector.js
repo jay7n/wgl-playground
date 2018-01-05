@@ -1,3 +1,5 @@
+import { stupidIsType } from 'j7/base'
+
 const Vector3 = {
     static: {
         add(v3a, v3b) {
@@ -23,33 +25,55 @@ const Vector3 = {
             return res
         },
 
+        cross(v3a, v3b) {
+            const x = v3a.y*v3b.z - v3a.z*v3b.y
+            const y = v3a.z*v3b.x - v3a.x*v3b.z
+            const z = v3a.x*v3b.y - v3a.y*v3b.x
+
+            return createVector3(x, y, z)
+        },
+
+        scale(v3, s) {
+            const v3s = createVector3(
+                v3._v[0] * s,
+                v3._v[1] * s,
+                v3._v[2] * s
+            )
+
+            return v3s
+        },
+
         multiplyMatrix3(v3, m3) {
             // TODO
         },
     },
 
     init(x, y, z) {
-        if (Array.prototype.isPrototypeOf(x)) {
-            Object.assign(this, {
-                _v: [x[0], x[1], x[2]]
-            })
-        } else if (Object.prototype.isPrototypeOf(x)) {
-            Object.assign(this, {
-                _v: [x.x, x.y, x.z]
-            })
-        } else {
-            if (x != null) {
-                Object.assign(this, {
-                    _v: [x,y,z]
-                })
+        let v = [0,0,0]
+
+        if (x != null) {
+            if (stupidIsType(x, Array)) {
+                const arr = x; v = [...arr]
+            } else if (stupidIsType(x, Object)) {
+                const obj = x; v = [obj.x, obj.y, obj.z, obj.w]
             } else {
-                this.setIdentity()
+                v = [x, y, z]
             }
         }
+
+        this._v = v
     },
 
-    setIdentity() {
-        this._v = [0,0,0]
+    get x() {
+        return this._v[0]
+    },
+
+    get y() {
+        return this._v[1]
+    },
+
+    get z() {
+        return this._v[2]
     },
 
     get v() {
@@ -74,6 +98,18 @@ const Vector3 = {
 
     dot(v3) {
         return this.static.dot(this, v3)
+    },
+
+    cross(v3) {
+        const byv3cross = this.static.cross(this, v3)
+        this._v = byv3cross._v
+        return this
+    },
+
+    scale(s) {
+        const bys = this.static.scale(this, s)
+        this._v = bys._v
+        return this
     },
 
     clone() {

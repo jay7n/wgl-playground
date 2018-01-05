@@ -1,3 +1,5 @@
+import {createQuaternion, Quaternion} from 'j7/math'
+
 const Matrix3 = {
     static: {
         multiply(m3a, m3b) {
@@ -126,7 +128,7 @@ const Matrix4 = {
         },
 
         transpose(m4) {
-            let m4t = createMatrix3()
+            let m4t = createMatrix4()
 
             m4t._m[0] = m4._m[0]
             m4t._m[1] = m4._m[4]
@@ -151,17 +153,57 @@ const Matrix4 = {
             return m4t
         },
 
-        transform(translation, rotation, scale) {
-            // TODO: currently only consider translation
+        translate(t) {
+            return createMatrix4(
+                1,      0,      0,      0,
+                0,      1,      0,      0,
+                0,      0,      1,      0,
+                t.v[0], t.v[1], t.v[2], 1
+            )
+        },
 
-            const t = translation.v
+        rotate(q) { // quaternion
+            if (!q.isNorm()) {
+                q.normalize()
+            }
+
+            const yy = q.y * q.y
+            const zz = q.z * q.z
+            const xy = q.x * q.y
+            const wz = q.w * q.z
+            const xz = q.x * q.z
+            const wy = q.w * q.y
+            const xx = q.x * q.x
+            const yz = q.y * q.z
+            const wx = q.w * q.x
 
             return createMatrix4(
-                1,    0,    0,    0,
-                0,    1,    0,    0,
-                0,    0,    1,    0,
-                t[0], t[1], t[2], 1
+                1-2*(yy+zz),  2*(xy+wz),   2*(xz-wy),   0,
+                2*(xy-wz),    1-2*(xx+zz), 2*(yz+wz) ,  0,
+                2*(xz+wy),    2*(yz-wx),   1-2*(xx+yy), 0,
+                0,            0,           0,           1
             )
+        },
+
+        scale(s) {
+            return createMatrix4(
+                s.v[0], 0,      0,      0,
+                0,      s.v[1], 0,      0,
+                0,      0,      s.v[2], 0,
+                0,      0,      0,      1
+            )
+        },
+
+        transform(translation, quaternion, scale) {
+            // Transform in a scale->quaternion->translation order
+            // TODO: for optimization, can hand-writed the matrix
+
+            const ms = Matrix4.static.scale(scale)
+            const mq = Matrix4.static.rotate(quaternion)
+            const mt = Matrix4.static.translate(translation)
+
+            const mres = createMatrix4()
+            return mres.multiply(ms).multiply(mq).multiply(mt)
         }
     },
 
@@ -207,6 +249,12 @@ const Matrix4 = {
     transpose() {
         const byselftrans = this.static.transpose(this)
         this._m = byselftrans._m
+        return this
+    },
+
+    translate(translation) {
+        const m4_t = this.static.translate(translation)
+        this.multiply(m4_t)
         return this
     },
 

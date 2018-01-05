@@ -41,6 +41,7 @@ export default class Application {
                 data: simpleMesh
             }
         })
+        node1.rotateAxisAngle('z', 45)
         this.scene.addSceneNode(node1)
 
         // const node3 = j7.createSceneNode({
