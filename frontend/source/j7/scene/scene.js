@@ -14,7 +14,7 @@ const Scene = {
                 light: [],
             },
             renderOptions: {
-                wireframeMode: true
+                wireframeMode: false
             }
         })
     },

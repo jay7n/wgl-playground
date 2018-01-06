@@ -8,7 +8,11 @@ export default class Application {
         if (!scene) {
             return
         }
-        this.scene = scene
+
+        Object.assign(this, {
+            scene,
+            canvas
+        })
     }
 
     start() {
@@ -17,17 +21,17 @@ export default class Application {
             position: [0,0,0],
             mounted: {
                 type: j7.Camera.static.type,
-                data: j7.createCamera(),
+                data: j7.createCamera(this.canvas),
             }
         })
         this.scene.addSceneNode(cameraNode)
 
         const simpleMesh = j7.createSimpleMesh({
             vertices: [
-                -1, 0, 0,
-                0, 0, 0,
-                0, 1, 0,
-                1, 0, 0
+                -1, 1, 0,
+                -1, -1, 0,
+                1, 1, 0,
+                1, -1, 0
             ],
             indices: [0,1,2, 2,1,3,],
             mode: 'TRIANGLES'
@@ -35,13 +39,16 @@ export default class Application {
 
         const node1 = j7.createSceneNode({
             name: 'testNode1',
-            position: [0,0,-2],
+            position: [0,1,-23.5],
+            rotationAxisAngle: {x:0,y:0,z:1,angle:45},
             mounted: {
                 type: j7.SimpleMesh.static.type,
                 data: simpleMesh
             }
         })
-        node1.rotateAxisAngle('z', 45)
+        // node1.setRotationAxisAngle('z', 90)
+        // node1.setScale(3,3,3)
+        // node1.translate(0, 3, 0)
         this.scene.addSceneNode(node1)
 
         // const node3 = j7.createSceneNode({

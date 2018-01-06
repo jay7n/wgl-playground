@@ -179,7 +179,7 @@ const Matrix4 = {
 
             return createMatrix4(
                 1-2*(yy+zz),  2*(xy+wz),   2*(xz-wy),   0,
-                2*(xy-wz),    1-2*(xx+zz), 2*(yz+wz) ,  0,
+                2*(xy-wz),    1-2*(xx+zz), 2*(yz+wx) ,  0,
                 2*(xz+wy),    2*(yz-wx),   1-2*(xx+yy), 0,
                 0,            0,           0,           1
             )
@@ -203,7 +203,8 @@ const Matrix4 = {
             const mt = Matrix4.static.translate(translation)
 
             const mres = createMatrix4()
-            return mres.multiply(ms).multiply(mq).multiply(mt)
+            mres.multiply(ms).multiply(mq).multiply(mt)
+            return mres
         }
     },
 

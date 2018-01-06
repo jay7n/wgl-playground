@@ -12,7 +12,7 @@ function initSceneAndNodeEnvironment(glib) {
     }
 
     if (!SceneNode.static.init(glib)) {
-        logger.prod.error('failed to init Node environment')
+        logger.prod.error('failed to init SceneNode environment')
         return false
     }
 

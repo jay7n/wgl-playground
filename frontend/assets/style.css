@@ -14,8 +14,8 @@ html, body {
 
 /* LINOTE: the canvas must be explicitly given an initial size in css styles before it's get resized*/
 #canvas {
-    width: 800px;
-    height: 450px;
+    width: 1024px;
+    height: 576px;
 }
 
 .my-girl-img {

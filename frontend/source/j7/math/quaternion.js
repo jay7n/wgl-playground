@@ -7,10 +7,10 @@ const Quaternion = {
             let axis = [x, y, z]
             if (stupidIsType(x, Array)) {
                 const arr = x; axis = [arr[0], arr[1], arr[2]]
-                angle = y
+                angle = arr[3] == null ? y : arr[3]
             } else if (stupidIsType(x, Object)) {
                 const obj = x; axis = [obj.x, obj.y, obj.z]
-                angle = y
+                angle = obj.angle == null ? y : obj.angle
             } else if (stupidIsType(x, String) || typeof x == 'string') {
                 const str = x
                 switch(str) {
@@ -47,7 +47,7 @@ const Quaternion = {
 
         isNorm(q) {
             const l = Quaternion.static.lengthSquare(q)
-            return l == 1
+            return Math.abs(l - 1) < 0.0001
         },
 
         multiply(qa, qb) {

@@ -27,12 +27,12 @@ const Camera = {
             return matrix
         }
     },
-    init(options) {
+    init(canvas, options) {
         options = Object.assign({
-            vFOVAngle: 60,
-            hwAspect: 0.75,
+            vFOVAngle: 45,
+            hwAspect: canvas.height / canvas.width,
             nearClip: -1,
-            farClip: -10,
+            farClip: -100,
             perspectiveProjectionMatrix: null
         }, options)
 

@@ -28,17 +28,17 @@ const SceneNode = {
         init(glib) {
             SceneNode.static._glib = glib
             return true
-        }
+        },
     },
 
     init(options) {
         options = Object.assign({
             // this part can be overridden by parameter options
             active: options.active == null ? true : options.active,
-            position: options.position || createVector3(),
+            position: options.position || [0,0,0],
             rotation: options.rotation,
             rotationAxisAngle: options.rotationAxisAngle,
-            scale: options.scale || createVector3(1,1,1),
+            scale: options.scale || [1,1,1],
             name: options.name || 'defaultSceneNodeName',
             mounted: options.mounted || {
                 type: 'Void',
@@ -63,6 +63,7 @@ const SceneNode = {
         } else {
             this.setRotation(0,0,0,1)
         }
+
         this.setScale(options.scale)
     },
 
@@ -72,6 +73,7 @@ const SceneNode = {
             pos = createVector3(x, y, z)
         }
         this.position = pos
+
         this.dirtyTransform = true
         return this
     },
@@ -85,7 +87,9 @@ const SceneNode = {
             pos = createVector3(x, y, z)
         }
         this.position.add(pos)
+
         this.dirtyTransform = true
+        return this
     },
 
     setRotation(x, y, z, w) {
@@ -94,6 +98,9 @@ const SceneNode = {
             quat = createQuaternion(x, y, z, w)
         }
         this.rotation = quat
+
+        this.dirtyTransform = true
+        return this
     },
 
     getRotation() {
@@ -106,6 +113,9 @@ const SceneNode = {
             quat = createQuaternion(x, y, z, w)
         }
         this.rotation = Quaternion.static.multiply(quat, this.rotation)
+
+        this.dirtyTransform = true
+        return this
     },
 
     setRotationAxisAngle(x, y, z, angle) {
@@ -119,6 +129,9 @@ const SceneNode = {
         // }
         const q = Quaternion.static.createFromAxisAngle(x, y, z, angle)
         this.rotation = q
+
+        this.dirtyTransform = true
+        return this
     },
 
     getRotationAxisAngle() {
@@ -136,6 +149,9 @@ const SceneNode = {
             scale = createVector3(x, y, z)
         }
         this.scale = scale
+
+        this.dirtyTransform = true
+        return this
     },
 
     getScale() {
@@ -152,6 +168,9 @@ const SceneNode = {
             this.scale.y * scale.y,
             this.scale.z * scale.z,
         )
+
+        this.dirtyTransform = true
+        return this
     },
 
     getParent() {

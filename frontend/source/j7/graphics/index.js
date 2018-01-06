@@ -48,6 +48,7 @@ function initGraphicsEnvironment(canvas) {
         return null
     }
 
+    glib.resize()
     return glib
 }
 
