@@ -4,6 +4,7 @@ var merge = require('webpack-merge')
 var CleanWebpackPlugin = require('clean-webpack-plugin')
 var CopyWebpackPlugin = require('copy-webpack-plugin')
 var HtmlWebpackPlugin = require('html-webpack-plugin')
+var BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
 
 var Conf = require('../conf')
 var baseWebpackConfig = require('./base.conf')
@@ -54,6 +55,10 @@ var prodWebpackConfig = merge(baseWebpackConfig, {
             },
             // necessary to consistently work with multiple chunks via CommonsChunkPlugin
             chunksSortMode: 'dependency'
+        }),
+
+        new BundleAnalyzerPlugin({
+            analyzerMode: 'static'
         }),
     ]
 })
