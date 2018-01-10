@@ -1,0 +1,26 @@
+html, body {
+    height: 100%; margin:0px;
+}
+
+#app {
+    display:flex;
+    display:-webkit-flex;
+    width: 100%;
+    height: 100%;
+    justify-content:center;
+    align-items: center;
+    flex-direction:column;
+}
+
+/* LINOTE: the canvas must be explicitly given an initial size in css styles before it's get resized*/
+#canvas {
+    width: 1024px;
+    height: 576px;
+}
+
+.my-girl-img {
+    margin:50px;
+    width:250px;
+    height:auto;
+    border-radius:5px;
+}

@@ -1,0 +1,67 @@
+{
+  "name": "linger",
+  "version": "1.0.0",
+  "description": "li N Graphics Engine of Rendering",
+  "main": "dist/prod/linger.js",
+  "scripts": {
+    "dist": "node build/dist.js",
+    "prod": "node build/prod.js",
+    "dev": "node build/dev.js",
+    "deploy": "node build/deploy.js",
+    "watch": "webpack --progress --watch",
+    "testtt": "node build/test.js",
+    "check": "./node_modules/.bin/eslint --format \"node_modules/eslint-friendly-formatter\"",
+    "checkall": "node ./node_modules/.bin/eslint --format 'node_modules/eslint-friendly-formatter' ./source"
+  },
+  "keywords": [
+    "js", "javascript", "webpack", "es", "graphics", "engine", "rendering", "li"
+  ],
+  "repository": {
+    "private": true
+  },
+  "author": "jay7n.li",
+  "license": "MIT",
+  "devDependencies": {
+    "babel-core": "6.26.0",
+    "babel-eslint": "7.2.3",
+    "babel-loader": "7.1.2",
+    "babel-plugin-transform-async-to-generator": "6.24.1",
+    "babel-plugin-transform-runtime": "6.23.0",
+    "babel-polyfill": "6.26.0",
+    "babel-preset-env": "1.6.0",
+    "babel-preset-stage-0": "6.24.1",
+    "chalk": "^2.1.0",
+    "clean-webpack-plugin": "0.1.16",
+    "copy-webpack-plugin": "4.0.1",
+    "eslint": "4.6.1",
+    "eslint-friendly-formatter": "3.0.0",
+    "eslint-loader": "1.9.0",
+    "express": "4.15.4",
+    "file-loader": "0.11.2",
+    "fs-extra": "^4.0.2",
+    "ftp-deploy": "1.2.2",
+    "google-closure-compiler": "20170806.0.0",
+    "html-webpack-plugin": "2.30.1",
+    "i": "0.3.5",
+    "node-dir": "0.1.17",
+    "opn": "5.1.0",
+    "ora": "^1.3.0",
+    "preprocessor": "1.4.0",
+    "request": "2.81.0",
+    "unzip": "0.1.11",
+    "url-loader": "0.5.9",
+    "webpack": "3.5.6",
+    "webpack-bundle-analyzer": "^2.9.1",
+    "webpack-closure-compiler": "2.1.5",
+    "webpack-dev-middleware": "1.12.0",
+    "webpack-dev-server": "2.7.1",
+    "webpack-glsl-loader": "^1.0.1",
+    "webpack-hot-middleware": "2.19.1",
+    "webpack-merge": "4.1.0",
+
+    "axios": "^0.17.0",
+    "lodash": "4.17.4",
+    "mathjs": "3.16.3",
+    "urijs": "^1.18.12"
+  }
+}
